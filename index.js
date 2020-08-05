@@ -1,14 +1,9 @@
 // code away!
-const express = require('express')
-const helmet = require('helmet')
 
-const serverRouter = require('./server')
-const server = express()
+const server = require('./server')
 
-server.use(express.json())
-server.use(helmet())
 
-server.use('/', serverRouter)
+
 
 
 const port = 5000
