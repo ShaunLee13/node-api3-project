@@ -1,5 +1,6 @@
 const express = require('express');
-const Users = require('./userDb')
+const Users = require('./userDb');
+const Posts = require('../posts/postDb')
 const router = express.Router();
 
 
@@ -55,11 +56,22 @@ router.delete('/:id', validateUserId, (req, res) => {
 });
 
 
-router.get('/:id/posts', (req, res) => {
-  // do your magic!
+router.get('/:id/posts', validateUserId, (req, res) => {
+    Users.getUserPosts(req.params.id)
+      .then(posts => {
+        res.status(200).json(posts)
+      })
+      .catch(error => {
+        res.status(500).json({ errorMessage : "Error retrieving posts"})
+      })
 });
-router.post('/:id/posts', (req, res) => {
-  // do your magic!
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
+  const newPost = req.body
+  newPost.user_id = req.params.id
+  Posts.insert(newPost)
+  .then(result => {
+    res.status(201).json(result)
+  })
 });
 
 //custom middleware
@@ -96,7 +108,7 @@ function validatePost(req, res, next) {
     if(!req.body){
       res.status(400).json({ message: "missing post data" })
     } else{
-      if(!req.body.name){
+      if(!req.body.text){
         res.status(400).json({ message: "missing required text field" })
       }else{
         next()
