@@ -15,19 +15,43 @@ router.get('/', (req, res) => {
 })
 router.post('/', validateUser, (req, res) => {
     Users.insert(req.body)
-      .then(result => console.log(result))
+      .then(result => {
+        res.status(201).json(result)
+      })
 });
 
 
-router.get('/:id', (req, res) => {
-  // do your magic!
+router.get('/:id', validateUserId, (req, res) => {
+    res.status(200).json(req.user)
 });
-router.delete('/:id', (req, res) => {
-  // do your magic!
+router.put('/:id', validateUserId, validateUser, (req, res) => {
+    const update = req.body
+    const id = req.params.id
+    Users.update(req.params.id, update)
+      .then(success => {
+        Users.getById(req.params.id)
+          .then(user => {
+            res.status(200).json(user)
+          })
+          .catch(error => {
+            console.log(error)
+            res.status(500).json({ message: "User updated, but unable to retrieve user. Please try again." })
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        res.status(500).json({ message: "There was an error updating this user." })
+      })
 });
-
-router.put('/:id', (req, res) => {
-  // do your magic!
+router.delete('/:id', validateUserId, (req, res) => {
+  Users.remove(req.params.id)
+    .then(success => {
+      res.status(204).end()
+    })
+    .catch(error => {
+      console.log(error)
+      res.status(500).json({errorMessage: "Error while deleting user. Please try again."})
+    })
 });
 
 
@@ -43,12 +67,16 @@ router.post('/:id/posts', (req, res) => {
 function validateUserId(req, res, next) {
     Users.getById(req.params.id)
       .then(user => {
-        req.user = user
-        next()
+        if(!user.name){
+          res.status(400).json({ message: "invalid user id" })
+        }else {
+          req.user = user
+          next()
+        }
       })
       .catch(error => {
         console.log(error)
-        res.status(400).json({ message: "invalid user id" })
+        res.status(500).json({ message: "Unable to retrieve user. Please try again." })
       })
   }
 
