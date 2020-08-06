@@ -1,4 +1,5 @@
 const express = require('express');
+const Posts = require('./postDb')
 
 const router = express.Router();
 
@@ -21,7 +22,15 @@ router.put('/:id', (req, res) => {
 // custom middleware
 
 function validatePostId(req, res, next) {
-  // do your magic!
-}
+    Posts.getById(req.params.id)
+      .then(post => {
+        req.post = post
+        next()
+      })
+      .catch(error => {
+        console.log(error)
+        res.status(400).json({ message: "invalid post id" })
+      })
+  }
 
 module.exports = router;
